@@ -1,4 +1,3 @@
-
 from time import sleep
 from rich.columns import Columns
 from rich.panel import Panel
@@ -6,7 +5,8 @@ from rich.live import Live
 from rich.text import Text
 from rich.table import Table
 import socket
-
+import pythonping
+from pythonping import ping
 
 
 
@@ -20,14 +20,19 @@ class RobotDashboard:
         self.server.listen()
         self.conn, self.adresses = self.server.accept()
         self.name = self.getname()
-
+        self.ping =ping(self.adresses[0])
     def generate_table(self) -> Table:
         table = Table(title="")
         table.add_column("NAME", style="cyan")
         table.add_column("IP", style="magenta")
+        table.add_column("PING", style="red")
         table.add_column("POSE OPTITRACK", style="green")
         table.add_column("POSE LOCAL ESTIMEATE", style="blue")
-        table.add_row(self.name, str(self.adresses), "X: 0, Y:0, Z:0","X: 0, Y:0, Z:0")
+        self.ping = ping(self.addresses[0])
+        if self.ping.rtt_avg_ms != 2000.0:
+            table.add_row(self.name, str(self.adresses[0]),str(self) "X: 0, Y:0, Z:0","X: 0, Y:0, Z:0")
+        else:
+            pass
         return table
     def getname(self):
 
