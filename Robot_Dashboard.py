@@ -28,9 +28,9 @@ class RobotDashboard:
         table.add_column("PING", style="red")
         table.add_column("POSE OPTITRACK", style="green")
         table.add_column("POSE LOCAL ESTIMEATE", style="blue")
-        self.ping = ping(self.addresses[0])
+        self.ping = ping(self.adresses[0])
         if self.ping.rtt_avg_ms != 2000.0:
-            table.add_row(self.name, str(self.adresses[0]),str(self) "X: 0, Y:0, Z:0","X: 0, Y:0, Z:0")
+            table.add_row(self.name, str(self.adresses[0]),str(self.ring.rtt_avg_ms), "X: 0, Y:0, Z:0","X: 0, Y:0, Z:0")
         else:
             pass
         return table
