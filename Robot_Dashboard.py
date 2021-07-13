@@ -75,5 +75,5 @@ with Live(
     while True:
         sleep(0.4)
 
-        Panel(live.update(x.generate_table()),title = "Robots", border_style="blue")
+        live.update(Panel(x.generate_table(),title = "Robots", border_style="blue"))
 
