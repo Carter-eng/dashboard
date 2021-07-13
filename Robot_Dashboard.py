@@ -25,14 +25,14 @@ class RobotDashboard:
         self.ping = [float]*15
         self.listenerThread = threading.Thread(target=self.listener,)
         self.listenerThread.start()
-        self.robotNames = [""]*15
-        self.robotAddresses = [""]*15
+        self.robotNames = []
+        self.robotAddresses = []
 
     def listener(self):
         while True:
             self.conn, self.address = self.server.accept()
-            self.robotNames[self.robotCounter] = self.getname()
-            self.robotAddresses[self.robotCounter] = self.address[0]
+            self.robotNames.append(self.getname)
+            self.robotAddresses.append(self.address[0])
             self.conn.close()
             robotNumber = self.robotCounter
             threading.Thread(target=self.pinger, args=(robotNumber,)).start()
