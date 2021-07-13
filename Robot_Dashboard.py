@@ -50,7 +50,7 @@ class RobotDashboard:
         table.add_column("POSE LOCAL ESTIMEATE", style="blue")
         for i in range(self.robotCounter):
             if self.ping[i].rtt_avg_ms != 2000.0:
-                table.add_row(self.robotNames[i], str(self.robotAddresses[i])+" ms",str(self.ping[i].rtt_avg_ms), "X: 0, Y:0, Z:0","X: 0, Y:0, Z:0")
+                table.add_row(self.robotNames[i], str(self.robotAddresses[i]),str(self.ping[i].rtt_avg_ms)+" ms", "X: 0, Y:0, Z:0","X: 0, Y:0, Z:0")
             else:
                 pass
         return table
