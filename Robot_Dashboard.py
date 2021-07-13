@@ -1,3 +1,4 @@
+
 from time import sleep
 from rich.columns import Columns
 from rich.panel import Panel
@@ -7,20 +8,39 @@ from rich.table import Table
 import socket
 import pythonping
 from pythonping import ping
+import threading
+import numpy as np
 
 
 
 class RobotDashboard:
     def __init__(self):
         self.HOST = '192.168.1.180'
-        self.PORT = 6006
+        self.PORT = 5000
 
         self.server = socket.socket()
         self.server.bind((self.HOST,self.PORT))
         self.server.listen()
-        self.conn, self.adresses = self.server.accept()
-        self.name = self.getname()
-        self.ping =ping(self.adresses[0])
+        self.robotCounter = 0
+        self.ping = [float]*15
+        self.listenerThread = threading.Thread(target=self.listener,)
+        self.listenerThread.start()
+        self.robotNames = [""]*15
+        self.robotAddresses = [""]*15
+
+    def listener(self):
+        while True:
+            self.conn, self.address = self.server.accept()
+            self.robotNames[self.robotCounter] = self.getname()
+            self.robotAddresses[self.robotCounter] = self.address[0]
+            self.conn.close()
+            robotNumber = self.robotCounter
+            threading.Thread(target=self.pinger, args=(robotNumber,)).start()
+            self.robotCounter += 1
+    def pinger(self,robotNumber):
+        while True:
+            self.ping[robotNumber] = ping(self.robotAddresses[robotNumber])
+            sleep(0.4)
     def generate_table(self) -> Table:
         table = Table(title="")
         table.add_column("NAME", style="cyan")
@@ -28,11 +48,11 @@ class RobotDashboard:
         table.add_column("PING", style="red")
         table.add_column("POSE OPTITRACK", style="green")
         table.add_column("POSE LOCAL ESTIMEATE", style="blue")
-        self.ping = ping(self.adresses[0])
-        if self.ping.rtt_avg_ms != 2000.0:
-            table.add_row(self.name, str(self.adresses[0]),str(self.ring.rtt_avg_ms), "X: 0, Y:0, Z:0","X: 0, Y:0, Z:0")
-        else:
-            pass
+        for i in range(self.robotCounter):
+            if self.ping[i].rtt_avg_ms != 2000.0:
+                table.add_row(self.robotNames[i], str(self.robotAddresses[i])+" ms",str(self.ping[i].rtt_avg_ms), "X: 0, Y:0, Z:0","X: 0, Y:0, Z:0")
+            else:
+                pass
         return table
     def getname(self):
 
@@ -51,3 +71,4 @@ with Live(
         sleep(0.4)
 
         Panel(live.update(x.generate_table()),title = "Robots", border_style="blue")
+
