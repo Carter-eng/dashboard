@@ -22,7 +22,7 @@ class RobotDashboard:
         self.server.bind((self.HOST,self.PORT))
         self.server.listen()
         self.robotCounter = 0
-        self.ping = [float]*15
+        self.ping = []
         self.listenerThread = threading.Thread(target=self.listener,)
         self.listenerThread.start()
         self.robotNames = []
@@ -34,6 +34,7 @@ class RobotDashboard:
             self.robotNames.append(self.getname)
             self.robotAddresses.append(self.address[0])
             self.conn.close()
+            self.ping.append(ping(self.address[0])
             robotNumber = self.robotCounter
             threading.Thread(target=self.pinger, args=(robotNumber,)).start()
             self.robotCounter += 1
