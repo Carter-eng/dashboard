@@ -4,7 +4,7 @@ import socket
 
 def client_program():
     host = '192.168.1.180'
-    port = 5000
+    port = 65432
     client = socket.socket()
     client.connect((host, port))
     message = str(socket.gethostname())
