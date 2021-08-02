@@ -17,17 +17,18 @@ from rich.live import Live
 from rich.text import Text
 from rich.table import Table
 import socket
-import pythonping
-from pythonping import ping
+import subprocess
 import threading
 import numpy as np
-
+import rospy
+from geometry_msgs.msg._PoseStamped import PoseStamped
 
 #Class storing the table definition and associated variables and functions
 class RobotDashboard:
     def __init__(self):
-        self.HOST = '192.168.1.180'
-        self.PORT = 65432
+        rospy.init_node("multirobot_dashboard",anonymous=True)
+        self.HOST = '192.168.1.170'
+        self.PORT = 40006
         self.server = socket.socket()
         self.server.bind((self.HOST,self.PORT))
         self.server.listen()
@@ -38,23 +39,43 @@ class RobotDashboard:
         self.robotNames = []
         self.robotAddresses = []
         self.errorCounter = []
+        self.poses = []
+        
 #Thread that listens for Robots to connect and registers their information
     def listener(self):
         while True:
             self.conn, self.address = self.server.accept()
-            self.robotNames.append(self.getname())
+            CurrentName = self.getname()
+            self.robotNames.append(CurrentName)
             self.robotAddresses.append(self.address[0])
             self.conn.close()
             robotNumber = self.robotCounter
-            self.ping.append(ping(self.address[0]))
+            ping_response = subprocess.Popen(["/bin/ping", "-c1", "-w100", str(self.address[0])], stdout=subprocess.PIPE).stdout.read()
+            self.ping.append(str(ping_response))
+            self.poses.append('')
             threading.Thread(target=self.pinger, args=(robotNumber,)).start()
+            threading.Thread(target=self.subscriberThread, args=(CurrentName,robotNumber,)).start()
             self.errorCounter.append(0)
             self.robotCounter += 1
+            
 #Thread for each robot that individually pings them
     def pinger(self,robotNumber):
         while True:
-            self.ping[robotNumber] = ping(self.robotAddresses[robotNumber])
+            ping_response = subprocess.Popen(["/bin/ping", "-c1", "-w100", str(self.robotAddresses[robotNumber])], stdout=subprocess.PIPE).stdout.read()
+            self.ping[robotNumber] = str(ping_response)
             sleep(0.4)
+            
+#Subscribes to the topics wherever necessary
+   def subscriberThread(self,CurrentName,robotNumber):
+        topicName = "/"+str(CurrentName)+"/pose"
+        rospy.Subscriber(topicName,PoseStamped,self.poseUpdate,(robotNumber))
+        rospy.spin()
+        
+#Pose callback function
+    def poseUpdate(self,msg,args):
+        position = msg.pose.position
+        self.poses[args] = "X:%f, Y:%f, Z:%F"%(position.x, position.y, position.z)
+                
 #creates the table that displays the information from the robots
     def generate_table(self) -> Table:
         table = Table(title="Robot information", border_style="yellow")
@@ -64,15 +85,17 @@ class RobotDashboard:
         table.add_column("POSE OPTITRACK")
         table.add_column("POSE LOCAL ESTIMEATE")
         for i in range(self.robotCounter):
-            if self.ping[i].rtt_avg_ms != 2000.0:
+            if self.ping[i].find('Destination')==-1:
                 self.errorCounter[i] = 0
-                table.add_row(str("[cyan]"+self.robotNames[i])+"[/cyan]","[magenta]" +str(self.robotAddresses[i])+"[/magenta]","[red]"+str(self.ping[i].rtt_avg_ms)+ " ms" +"[/red]","[green]X: 0, Y:0, Z:0[/green]","[blue]X: 0, Y:0, Z:0[/blue]")
+                t = self.ping[i].split(' ')
+                table.add_row(str("[cyan]"+self.robotNames[i])+"[/cyan]","[magenta]" +str(self.robotAddresses[i])+"[/magenta]","[red]"+t[12]+ " ms" +"[/red]","[green]"+self.poses[i]+"[/green]","[blue]X: 0, Y:0, Z:0[/blue]")
             elif self.errorCounter[i] < 100:
                 table.add_row(str(self.robotNames[i]),str(self.robotAddresses[i]),"Robot Not Found", "X: 0, Y:0, Z:0","X: 0, Y:0, Z:0")
                 self.errorCounter[i] +=1
             else:
                 pass
         return table
+        
 #recieves the hostname from the robot when they run the client
     def getname(self):
 
@@ -91,4 +114,5 @@ with Live(
         sleep(0.4)
 
         live.update(Panel(x.generate_table(),title = "Robots", border_style="blue"))
+        
 
