@@ -3,8 +3,8 @@ import socket
 
 
 def client_program():
-    host = '192.168.1.180'
-    port = 65432
+    host = '192.168.1.170'
+    port = 40006
     client = socket.socket()
     client.connect((host, port))
     message = str(socket.gethostname())
