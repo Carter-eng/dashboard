@@ -63,7 +63,7 @@ class RobotDashboard:
             self.errorCounter.append(0)
             self.robotCounter += 1
             
-#Thread for each robot that individually pings them
+#Thread for each robot that individually pings them and publishes to individual ROS topics
     def pinger(self,robotNumber):
         pingStr = self.robotNames[robotNumber] + "PingTime"
         pingPub = rospy.Publisher(pingStr, Float64, queue_size=20)
