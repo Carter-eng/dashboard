@@ -22,11 +22,13 @@ import threading
 import numpy as np
 import rospy
 from geometry_msgs.msg._PoseStamped import PoseStamped
+from std_msgs.msg import String, Float64
 
 #Class storing the table definition and associated variables and functions
 class RobotDashboard:
     def __init__(self):
         rospy.init_node("multirobot_dashboard",anonymous=True)
+        self.statusPub = rospy.Publisher('robotStatus', String, queue_size=20)
         self.HOST = '192.168.1.170'
         self.PORT = 40006
         self.server = socket.socket()
@@ -40,12 +42,15 @@ class RobotDashboard:
         self.robotAddresses = []
         self.errorCounter = []
         self.poses = []
+        self.pingPubs = []
         
 #Thread that listens for Robots to connect and registers their information
     def listener(self):
         while True:
             self.conn, self.address = self.server.accept()
             CurrentName = self.getname()
+            statusStr = CurrentName + " is online"
+            self.statusPub.pubblish(statusStr)
             self.robotNames.append(CurrentName)
             self.robotAddresses.append(self.address[0])
             self.conn.close()
@@ -60,9 +65,18 @@ class RobotDashboard:
             
 #Thread for each robot that individually pings them
     def pinger(self,robotNumber):
+        pingStr = self.robotNames[robotNumber] + "PingTime"
+        pingPub = rospy.Publisher(pingStr, Float64, queue_size=20)
         while True:
             ping_response = subprocess.Popen(["/bin/ping", "-c1", "-w100", str(self.robotAddresses[robotNumber])], stdout=subprocess.PIPE).stdout.read()
             self.ping[robotNumber] = str(ping_response)
+            pingList = self.ping[robotNumber].split(' ')
+            if self.ping[robotNumber].find('Destination')==-1:
+                pingTimeStr = pingList[12].split('=')
+                pingFloat = float(pingTimeStr[1])
+                pingPub.publish(pingFloat)
+            else:
+                pingPub.publish(3000)
             sleep(0.4)
             
 #Subscribes to the topics wherever necessary
@@ -86,12 +100,19 @@ class RobotDashboard:
         table.add_column("POSE LOCAL ESTIMEATE")
         for i in range(self.robotCounter):
             if self.ping[i].find('Destination')==-1:
+                if self.errorCounter == 101:
+                    statusStr = self.robotNames[i] + " is back online"
+                    self.statusPub.publish(statusStr)
                 self.errorCounter[i] = 0
                 t = self.ping[i].split(' ')
-                table.add_row(str("[cyan]"+self.robotNames[i])+"[/cyan]","[magenta]" +str(self.robotAddresses[i])+"[/magenta]","[red]"+t[12]+ " ms" +"[/red]","[green]"+self.poses[i]+"[/green]","[blue]X: 0, Y:0, Z:0[/blue]")
+                table.add_row(str("[cyan]"+self.robotNames[i])+"[/cyan]","[magenta]" +str(self.robotAddresses[i])+"[/magenta]","[red]"+t[12]+ " ms" +"[/red]","[green]"+self.poses[i]+"[/green]","[blue]X:0, Y:0, Z:0[/blue]")
             elif self.errorCounter[i] < 100:
                 table.add_row(str(self.robotNames[i]),str(self.robotAddresses[i]),"Robot Not Found", "X: 0, Y:0, Z:0","X: 0, Y:0, Z:0")
                 self.errorCounter[i] +=1
+            elif self.errorCounter[i] == 100:
+                statusStr = self.robotNames[i] + " is no longer online"
+                self.statusPub.publish(statusStr)
+                self.errorCounter +=1
             else:
                 pass
         return table
@@ -115,4 +136,4 @@ with Live(
 
         live.update(Panel(x.generate_table(),title = "Robots", border_style="blue"))
         
-
+       
