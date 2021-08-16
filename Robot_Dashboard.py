@@ -50,7 +50,7 @@ class RobotDashboard:
             self.conn, self.address = self.server.accept()
             CurrentName = self.getname()
             statusStr = CurrentName + " is online"
-            self.statusPub.pubblish(statusStr)
+            self.statusPub.publish(statusStr)
             self.robotNames.append(CurrentName)
             self.robotAddresses.append(self.address[0])
             self.conn.close()
@@ -112,7 +112,7 @@ class RobotDashboard:
             elif self.errorCounter[i] == 100:
                 statusStr = self.robotNames[i] + " is no longer online"
                 self.statusPub.publish(statusStr)
-                self.errorCounter +=1
+                self.errorCounter[i] +=1
             else:
                 pass
         return table
