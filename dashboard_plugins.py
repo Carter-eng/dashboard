@@ -10,7 +10,7 @@ from geometry_msgs.msg._PoseStamped import PoseStamped
 
 
 
-class Dashboard_Pose(robotAddresses,robotNumber,robotNames):
+class Dashboard_Pose(robotAddresses,robotNumber,robotNames,robotType):
 	def __init__(self):
 		self.label = "Mocap Pose"
 		self.value = ''
