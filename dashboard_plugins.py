@@ -13,7 +13,7 @@ from geometry_msgs.msg._PoseStamped import PoseStamped
 class Dashboard_Pose(robotAddresses,robotNumber,robotNames):
 	def __init__(self):
 		self.label = "Mocap Pose"
-		self.pose = ''
+		self.value = ''
 		if robotAddresses !=0:
 			self.subscriber(robotNames,robotNumber)
 		else:
@@ -25,4 +25,4 @@ class Dashboard_Pose(robotAddresses,robotNumber,robotNames):
 
     def poseUpdate(self,msg,args):
         position = msg.pose.position
-        self.pose = "X:%f, Y:%f, Z:%F"%(position.x, position.y, position.z)
+        self.value = "X:%f, Y:%f, Z:%F"%(position.x, position.y, position.z)
