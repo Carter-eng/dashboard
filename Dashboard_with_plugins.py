@@ -40,6 +40,7 @@ class RobotDashboard:
         self.server.listen()
         self.robotCounter = 0
         self.ping = []
+        self.robotType = []
         self.labels = []
         self.classes = []
         self.class_inits =[]
@@ -61,7 +62,10 @@ class RobotDashboard:
     def listener(self):
         while True:
             self.conn, self.address = self.server.accept()
-            CurrentName = self.getname()
+            information = self.getname()
+            information.split(_)
+            CurrentName = information[0]
+            self.robotType.append(information[1])
             statusStr = CurrentName + " is online"
             self.statusPub.pubblish(statusStr)
             self.robotNames.append(CurrentName)
@@ -73,7 +77,7 @@ class RobotDashboard:
             threading.Thread(target=self.pinger, args=(robotNumber,)).start()
             self.errorCounter.append(0)
             for j in range(len(self.classes)):
-                self.class_storage[j].append(self.classes[j](self.robotAddresses,robotNumber,self.robotNames))
+                self.class_storage[j].append(self.classes[j](self.robotAddresses,robotNumber,self.robotNames,self.robotType))
             self.robotCounter += 1
 
     def pinger(self,robotNumber):
