@@ -7,7 +7,7 @@ def client_program():
     port = 40006
     client = socket.socket()
     client.connect((host, port))
-    message = str(socket.gethostname())
+    message = str(socket.gethostname()) + "Create"
     client.send(message.encode())
 
 if __name__ == '__main__':
