@@ -130,7 +130,7 @@ class RobotDashboard:
                 column_vals = (str(self.robotNames[i]),str(self.robotAddresses[i]),"Robot Not Found")
                 for p in range(len(self.labels)):
                     column_vals = column_vals + ("No Data")
-                table.add_row(str(self.robotNames[i]),str(self.robotAddresses[i]),"Robot Not Found", "X: 0, Y:0, Z:0","X: 0, Y:0, Z:0")
+                table.add_row(*column_vals)
                 self.errorCounter[i] +=1
             elif self.errorCounter[i] == 100:
                 statusStr = self.robotNames[i] + " is no longer online"
