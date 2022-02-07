@@ -23,6 +23,7 @@ import inspect
 import subprocess
 import threading
 import numpy as np
+from dashboard_plugins import class_labels
 import rospy
 from geometry_msgs.msg._PoseStamped import PoseStamped
 from std_msgs.msg import String, Float64
@@ -38,14 +39,21 @@ class RobotDashboard:
         self.server.bind((self.HOST,self.PORT))
         self.server.listen()
         self.robotCounter = 0
-        self.classes = []
+        self.ping = []
+        self.labels = []
+        self.classes = []\
+        self.class_inits =[]
         self.classes = self.get_classes(dashboard_plugins)
+        for o in range(len(self.classes)):
+            x = self.classes[o](0,0,0)
+            self.labels.append(x.label)
         self.class_storage = [[] for i in range(len(self.classes))]
         self.listenerThread = threading.Thread(target=self.listener,)
         self.listenerThread.start()
         self.robotNames = []
         self.robotAddresses = []
         self.errorCounter = []
+        self.pingPubs = []
 
         
         
@@ -60,12 +68,29 @@ class RobotDashboard:
             self.robotAddresses.append(self.address[0])
             self.conn.close()
             robotNumber = self.robotCounter
+            ping_response = subprocess.Popen(["/bin/ping", "-c1", "-w100", str(self.address[0])], stdout=subprocess.PIPE).stdout.read()
+            self.ping.append(str(ping_response))
+            threading.Thread(target=self.pinger, args=(robotNumber,)).start()
             self.errorCounter.append(0)
             for j in range(len(self.classes)):
                 self.class_storage[j].append(self.classes[j](self.robotAddresses,robotNumber,self.robotNames))
             self.robotCounter += 1
 
-
+    def pinger(self,robotNumber):
+        pingStr = self.robotNames[robotNumber] + "PingTime"
+        pingPub = rospy.Publisher(pingStr, Float64, queue_size=20)
+        while True:
+            ping_response = subprocess.Popen(["/bin/ping", "-c1", "-w100", str(self.robotAddresses[robotNumber])], stdout=subprocess.PIPE).stdout.read()
+            self.ping[robotNumber] = str(ping_response)
+            pingList = self.ping[robotNumber].split(' ')
+            if self.ping[robotNumber].find('Destination')==-1:
+                pingTimeStr = pingList[12].split('=')
+                pingFloat = float(pingTimeStr[1])
+                pingPub.publish(pingFloat)
+            else:
+                pingPub.publish(3000)
+            sleep(0.4)
+            
 
     def get_classes(self,module):
         class_list = inspect.getmembers(module, inspect.isclass)
@@ -77,14 +102,15 @@ class RobotDashboard:
     def getname(self):
         data = self.conn.recv(1024).decode()
         return(str(data))
-"""
-     def generate_table(self) -> Table:
+
+    def generate_table(self) -> Table:
         table = Table(title="Robot information", border_style="yellow")
         table.add_column("NAME")
         table.add_column("IP")
-        table.add_column("PING")
-        table.add_column("POSE OPTITRACK")
-        table.add_column("POSE LOCAL ESTIMEATE")
+        table.add_column("Ping Time")
+        for k in range(len(self.labels)):
+            table.add_column(self.labels[k])
+
         for i in range(self.robotCounter):
             if self.ping[i].find('Destination')==-1:
                 if self.errorCounter == 101:
@@ -103,7 +129,7 @@ class RobotDashboard:
             else:
                 pass
         return table
-"""
+
 x = RobotDashboard()
 with Live(
     Panel(x.generate_table(), title="Robots", border_style="blue"),
