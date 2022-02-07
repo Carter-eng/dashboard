@@ -41,7 +41,7 @@ class RobotDashboard:
         self.robotCounter = 0
         self.ping = []
         self.labels = []
-        self.classes = []\
+        self.classes = []
         self.class_inits =[]
         self.classes = self.get_classes(dashboard_plugins)
         for o in range(len(self.classes)):
