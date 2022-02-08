@@ -39,7 +39,7 @@ class Dashboard_Battery(robotAddresses,robotNumber,robotNames):
         	topicName = "/"+str(robotNames[robotNumber])+"/battery/charge_ratio"
         	rospy.Subscriber(topicName,Float64,self.batteryUpdate)
         	rospy.spin()
-
-    def batteryUpdate(self,battery):
+	
+	def batteryUpdate(self,battery):
 		Battery_Percent = battery.data*100
 		self.value = str(round(Battery_Percent,2))+"%"
