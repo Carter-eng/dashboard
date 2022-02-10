@@ -123,13 +123,13 @@ class RobotDashboard:
                 t = self.ping[i].split(' ')
                 column_vals = ("[cyan]"+self.robotNames[i])+"[/cyan]","[magenta]" +str(self.robotAddresses[i])+"[/magenta]","[red]"+t[12]+ " ms" +"[/red]")
                 for l in range(len(self.labels)):
-                    column_vals = column_vals + ("[green]"+self.class_storage[i][l].value+"[green]")
+                    column_vals = column_vals + ("[green]"+self.class_storage[i][l].value+"[green]",)
                 self.errorCounter[i] = 0
-                table.add_row(str(*column_vals)
+                table.add_row(*column_vals)
             elif self.errorCounter[i] < 100:
                 column_vals = (str(self.robotNames[i]),str(self.robotAddresses[i]),"Robot Not Found")
                 for p in range(len(self.labels)):
-                    column_vals = column_vals + ("No Data")
+                    column_vals = column_vals + ("No Data",)
                 table.add_row(*column_vals)
                 self.errorCounter[i] +=1
             elif self.errorCounter[i] == 100:
