@@ -27,7 +27,7 @@ class Dashboard_Pose(robotAddresses,robotNumber,robotNames,robotType):
         	position = msg.pose.position
         	self.value = "X:%f, Y:%f, Z:%F"%(position.x, position.y, position.z)
 
-class Dashboard_Battery(robotAddresses,robotNumber,robotNames):
+class Dashboard_Battery(robotAddresses,robotNumber,robotNames,robotType):
 	def __init__(self):
 		self.label = "Battery Level"
 		self.value = ''
